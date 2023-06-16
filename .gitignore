@@ -1,0 +1,14 @@
+# 忽略特定文件
+Enhanced DetailNet.py
+Enhanced DetailNet.md
+research.md
+
+# 忽略特定文件夹
+data/
+
+# 使用通配符忽略文件类型或模式
+*.csv
+*.log
+*.pth
+*.txt~
+*old*
