@@ -9,7 +9,7 @@ Enhanced DetailNet 模型中使用的一些数学公式：
    
 2. 激活函数（Activation Function）：
    - ReLU（Rectified Linear Unit）函数：
-     ```
+     ```math
      f(x) = max(0, x)
      ```
      其中，`x` 是输入值。
@@ -35,7 +35,7 @@ Enhanced DetailNet 模型中使用的一些数学公式：
    
 5. 池化操作（Pooling）：
    - 最大池化（Max Pooling）操作：
-     ```
+     ```math
      C[i, j] = max(A[i*s, j*s])  (i, j)
      ```
      其中，`A` 是输入特征图，`C` 是池化结果，`s` 是池化的步幅。
