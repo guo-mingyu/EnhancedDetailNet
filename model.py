@@ -78,8 +78,11 @@ class EnhancedDetailNet(nn.Module):
         # Classification/regression layer
         x = self.fc(x)
 
+        # Dropout layer
+        x = self.dropout(x)
+
         # Softmax layer
-        x = self.softmax(x)
+        x = nn.functional.softmax(x, dim=1)
 
         return x
 
