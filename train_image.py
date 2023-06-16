@@ -1,25 +1,37 @@
 import os
-from PIL import Image
-from data.dataset import PlantVillageDataset
 
-# 定义数据集根目录和目标文件路径
-data_root = 'PlantVillage'
+# Define data directory and target file paths
+data_root = r'./data/PlantVillage'
 train_file = 'train.txt'
 val_file = 'val.txt'
+test_file = 'test.txt'
+label_file = 'labels.txt'
 
-# 创建训练数据集实例
-train_dataset = PlantVillageDataset(root_dir=data_root, transform=ToTensor())
+# Get subdirectories in the data root directory
+subdirectories = sorted([d for d in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, d))])
 
-# 创建验证数据集实例
-val_dataset = PlantVillageDataset(root_dir=data_root, transform=ToTensor())
+# Create training, validation, and test files
+with open(train_file, 'w') as train_f, open(val_file, 'w') as val_f, open(test_file, 'w') as test_f:
+    for class_index, subdirectory in enumerate(subdirectories):
+        subdirectory_path = os.path.join(data_root, subdirectory)
+        image_names = os.listdir(subdirectory_path)
+        num_images = len(image_names)
 
-# 创建保存图像名的文件
-with open(train_file, 'w') as f:
-    for image_path, _ in train_dataset:
-        image_name = os.path.basename(image_path)
-        f.write(image_name + '\n')
+        # Determine the number of images for training, validation, and test
+        num_train = int(0.8 * num_images)  # 80% for training
+        num_val = int(0.1 * num_images)  # 10% for validation
+        num_test = num_images - num_train - num_val  # Remaining 10% for test
 
-with open(val_file, 'w') as f:
-    for image_path, _ in val_dataset:
-        image_name = os.path.basename(image_path)
-        f.write(image_name + '\n')
+        # Write image names and labels to the corresponding files
+        for i, image_name in enumerate(image_names):
+            image_path = os.path.join(subdirectory_path, image_name)
+            if i < num_train:
+                train_f.write(f"{image_path},{class_index}\n")
+            elif i < num_train + num_val:
+                val_f.write(f"{image_path},{class_index}\n")
+            else:
+                test_f.write(f"{image_path},{class_index}\n")
+
+# Save labels to a file
+with open(label_file, 'w') as label_f:
+    label_f.write('\n'.join(subdirectories))

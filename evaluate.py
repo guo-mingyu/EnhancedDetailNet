@@ -4,16 +4,18 @@ from torch.utils.data import DataLoader
 from dataset import CustomDataset
 from model import EnhancedDetailNet
 from utils.metrics import accuracy
+from torchvision.transforms import ToTensor
+
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the test dataset
-test_dataset = CustomDataset(...)
+test_dataset = CustomDataset("./test.txt", transform=ToTensor())
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 # Create the model
-model = EnhancedDetailNet(...)
+model = EnhancedDetailNet(num_classes=num_classes, input_channels=input_channels)
 model = model.to(device)
 
 # Load the trained model
@@ -33,4 +35,5 @@ with torch.no_grad():
         total_correct += (predicted == labels).sum().item()
 
     accuracy = 100 * total_correct / total_samples
-    print(f"Accuracy: {accuracy}%")
+    print(f"Accuracy: {accuracy:.2f}%")
+
