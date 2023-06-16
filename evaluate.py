@@ -1,39 +1,36 @@
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
+from data.dataset import CustomDataset
 from model import EnhancedDetailNet
-from utils.dataset import CustomDataset
 from utils.metrics import accuracy
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the test dataset
-test_dataset = CustomDataset('data/test/')
-test_loader = DataLoader(test_dataset)
+test_dataset = CustomDataset(...)
+test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+
+# Create the model
+model = EnhancedDetailNet(...)
+model = model.to(device)
 
 # Load the trained model
-model = EnhancedDetailNet().to(device)
-model.load_state_dict(torch.load('checkpoints/model.pth'))
+model.load_state_dict(torch.load("model.pth"))
 model.eval()
 
 # Evaluation loop
-test_acc = 0.0
-
 with torch.no_grad():
+    total_correct = 0
+    total_samples = 0
     for images, labels in test_loader:
         images = images.to(device)
         labels = labels.to(device)
-
-        # Forward pass
         outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total_samples += labels.size(0)
+        total_correct += (predicted == labels).sum().item()
 
-        # Compute accuracy
-        acc = accuracy(outputs, labels)
-
-        test_acc += acc * images.size(0)
-
-# Compute average accuracy
-test_acc /= len(test_dataset)
-
-print(f"Test Accuracy: {test_acc:.4f}")
+    accuracy = 100 * total_correct / total_samples
+    print(f"Accuracy: {accuracy}%")

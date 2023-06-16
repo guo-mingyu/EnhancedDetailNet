@@ -1,83 +1,136 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
-class MultiScaleAttention(nn.Module):
-    def __init__(self, in_channels):
-        super(MultiScaleAttention, self).__init__()
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        # 1x1卷积核计算注意力权重
-        attention_1x1 = self.conv(x)
-        # 使用sigmoid函数将权重限制在0到1之间
-        attention_1x1 = self.sigmoid(attention_1x1)
-        # 缩放注意力权重
-        scaled_attention = x * attention_1x1
-
-        # 其他尺度的注意力计算
-        # ...
-
-        return scaled_attention
-
-class AttentionModule(nn.Module):
-    def __init__(self, in_channels):
-        super(AttentionModule, self).__init__()
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)
-        self.sigmoid = nn.Sigmoid()
-        self.multi_scale_attention = MultiScaleAttention(in_channels)
-
-    def forward(self, x):
-        # 自注意力计算
-        self_attention = self.conv(x)
-        self_attention = self.sigmoid(self_attention)
-
-        # 多尺度注意力计算
-        scaled_attention = self.multi_scale_attention(x)
-
-        # 引入残差连接
-        attention_output = x + scaled_attention
-        attention_output = attention_output * self_attention
-
-        return attention_output
 
 class EnhancedDetailNet(nn.Module):
-    def __init__(self, input_shape, num_classes):
+    def __init__(self, input_channels, num_classes):
         super(EnhancedDetailNet, self).__init__()
-        channels, height, width = input_shape
 
-        self.conv1 = nn.Conv2d(channels, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        # Input layer
+        self.input_layer = nn.Conv2d(input_channels, 64, kernel_size=3, padding=1)
+        self.relu = nn.ReLU(inplace=True)
 
-        self.attention_modules = nn.ModuleList([AttentionModule(64) for _ in range(8)])
+        # Convolutional module
+        self.conv_module = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True)
+        )
 
-        self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
+        # Residual connection
+        self.residual = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=1),
+            nn.ReLU(inplace=True)
+        )
 
-        self.fc1 = nn.Linear(64, 128)
-        self.fc2 = nn.Linear(128, num_classes)
+        # Attention module
+        self.self_attention = SelfAttentionModule(64)
+        self.multi_scale_attention = MultiScaleAttentionModule(64)
+
+        # Pooling layer
+        self.pooling = nn.MaxPool2d(kernel_size=2)
+
+        # Enhanced convolutional layer
+        self.enhanced_conv = nn.Sequential(
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True)
+        )
+
+        # Global feature encoding
+        self.global_pooling = nn.AdaptiveAvgPool2d(1)
+
+        # Classification/regression layer
+        self.fc = nn.Linear(128, num_classes)
+
+        # Softmax layer
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
-        # 第一层卷积
-        x = F.relu(self.conv1(x))
-        # 第二层卷积
-        x = F.relu(self.conv2(x))
+        # Input layer
+        x = self.input_layer(x)
+        x = self.relu(x)
 
-        # 堆叠多个注意力模块
-        for attention_module in self.attention_modules:
-            residual = x
-            x = F.relu(attention_module(x))
-            x = x + residual
+        # Convolutional module
+        residual = self.residual(x)
+        x = self.conv_module(x)
+        x = x + residual
+        x = self.relu(x)
 
-        # 全局平均池化
-        x = self.global_avg_pool(x)
-        x = torch.flatten(x, 1)
+        # Attention module
+        x = self.self_attention(x)
+        x = self.multi_scale_attention(x)
 
-        # 全连接层
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        # Pooling layer
+        x = self.pooling(x)
 
-        # 输出层使用softmax激活函数
-        x = F.softmax(x, dim=1)
+        # Enhanced convolutional layer
+        x = self.enhanced_conv(x)
+        x = self.relu(x)
+
+        # Global feature encoding
+        x = self.global_pooling(x)
+        x = x.view(x.size(0), -1)
+
+        # Classification/regression layer
+        x = self.fc(x)
+
+        # Softmax layer
+        x = self.softmax(x)
 
         return x
+
+
+class SelfAttentionModule(nn.Module):
+    def __init__(self, channels):
+        super(SelfAttentionModule, self).__init__()
+
+        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.value = nn.Conv2d(channels, channels, kernel_size=1)
+
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        batch_size, channels, height, width = x.size()
+
+        query = self.query(x).view(batch_size, -1, height * width).permute(0, 2, 1)
+        key = self.key(x).view(batch_size, -1, height * width)
+        value = self.value(x).view(batch_size, -1, height * width)
+
+        attention = torch.matmul(query, key)
+        attention = nn.functional.softmax(attention, dim=-1)
+
+        out = torch.matmul(attention, value)
+        out = out.view(batch_size, channels, height, width)
+
+        out = self.gamma * out + x
+
+        return out
+
+
+class MultiScaleAttentionModule(nn.Module):
+    def __init__(self, channels, reduction=16):
+        super(MultiScaleAttentionModule, self).__init__()
+
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+
+        self.fc = nn.Sequential(
+            nn.Conv2d(channels, channels // reduction, kernel_size=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channels // reduction, channels, kernel_size=1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        avg_out = self.avg_pool(x)
+        max_out = self.max_pool(x)
+        avg_out = self.fc(avg_out)
+        max_out = self.fc(max_out)
+        out = avg_out * x + max_out * x
+
+        return out
