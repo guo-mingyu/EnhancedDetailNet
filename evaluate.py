@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from data.dataset import CustomDataset
+from dataset import CustomDataset
 from model import EnhancedDetailNet
 from utils.metrics import accuracy
 
