@@ -6,35 +6,35 @@ class EnhancedDetailNet(nn.Module):
         super(EnhancedDetailNet, self).__init__()
 
         # Input layer
-        self.input_layer = nn.Conv2d(input_channels, 64, kernel_size=3, padding=1)
+        self.input_layer = nn.Conv2d(input_channels, 32, kernel_size=3, padding=1)
         self.relu = nn.ReLU(inplace=True)
 
         # Convolutional module
         self.conv_module = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True)
         )
 
         # Residual connection
         self.residual = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=1),
+            nn.Conv2d(32, 32, kernel_size=1),
             nn.ReLU(inplace=True)
         )
 
         # Attention module
-        self.self_attention = SelfAttentionModule(64)
-        self.multi_scale_attention = MultiScaleAttentionModule(64)
+        self.self_attention = SelfAttentionModule(32)
+        self.multi_scale_attention = MultiScaleAttentionModule(32)
 
         # Pooling layer
         self.pooling = nn.MaxPool2d(kernel_size=2)
 
         # Enhanced convolutional layer
         self.enhanced_conv = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.Conv2d(32, 128, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 128, kernel_size=3, padding=1),
             nn.ReLU(inplace=True)
@@ -50,7 +50,7 @@ class EnhancedDetailNet(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         # Dropout layer
-        #self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         # Input layer
@@ -82,10 +82,10 @@ class EnhancedDetailNet(nn.Module):
         x = self.fc(x)
 
         # Dropout layer
-        #x = self.dropout(x)
+        x = self.dropout(x)
 
         # Softmax layer
-        x = nn.functional.softmax(x, dim=-1)
+        x = self.softmax(x)
 
         return x
 
@@ -94,8 +94,8 @@ class SelfAttentionModule(nn.Module):
     def __init__(self, channels):
         super(SelfAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
@@ -105,12 +105,13 @@ class SelfAttentionModule(nn.Module):
 
         query = self.query(x).view(batch_size, -1, height * width).permute(0, 2, 1)
         key = self.key(x).view(batch_size, -1, height * width)
+
+        energy = torch.bmm(query, key)
+        attention = torch.softmax(energy, dim=-1)
+
         value = self.value(x).view(batch_size, -1, height * width)
 
-        attention = torch.matmul(query, key)
-        attention = nn.functional.softmax(attention, dim=-1)
-
-        out = torch.matmul(attention, value)
+        out = torch.bmm(value, attention.permute(0, 2, 1))
         out = out.view(batch_size, channels, height, width)
 
         out = self.gamma * out + x
@@ -119,24 +120,29 @@ class SelfAttentionModule(nn.Module):
 
 
 class MultiScaleAttentionModule(nn.Module):
-    def __init__(self, channels, reduction=16):
+    def __init__(self, channels):
         super(MultiScaleAttentionModule, self).__init__()
 
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
-        self.fc = nn.Sequential(
-            nn.Conv2d(channels, channels // reduction, kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(channels // reduction, channels, kernel_size=1),
-            nn.Sigmoid()
-        )
+        self.gamma = nn.Parameter(torch.zeros(1))
 
     def forward(self, x):
-        avg_out = self.avg_pool(x)
-        max_out = self.max_pool(x)
-        avg_out = self.fc(avg_out)
-        max_out = self.fc(max_out)
-        out = avg_out * x + max_out * x
+        batch_size, channels, height, width = x.size()
+
+        query = self.query(x).view(batch_size, -1, height * width)
+        key = self.key(x).view(batch_size, -1, height * width).permute(0, 2, 1)
+
+        energy = torch.bmm(query, key)
+        attention = torch.softmax(energy, dim=-1)
+
+        value = self.value(x).view(batch_size, -1, height * width)
+
+        out = torch.bmm(attention.permute(0, 2, 1), value)
+        out = out.view(batch_size, channels, height, width)
+
+        out = self.gamma * out + x
 
         return out
