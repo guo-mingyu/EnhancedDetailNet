@@ -2,9 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from dataset import CustomDataset
+
 from model import EnhancedDetailNet
 from utils.metrics import accuracy
+from utils.dataset import CustomDataset
+
 from torchvision.transforms import ToTensor
 
 # Set device
