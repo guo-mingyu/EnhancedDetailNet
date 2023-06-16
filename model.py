@@ -49,6 +49,9 @@ class EnhancedDetailNet(nn.Module):
         # Softmax layer
         self.softmax = nn.Softmax(dim=1)
 
+        # Dropout layer
+        #self.dropout = nn.Dropout(0.5)
+
     def forward(self, x):
         # Input layer
         x = self.input_layer(x)
@@ -79,10 +82,10 @@ class EnhancedDetailNet(nn.Module):
         x = self.fc(x)
 
         # Dropout layer
-        x = self.dropout(x)
+        #x = self.dropout(x)
 
         # Softmax layer
-        x = nn.functional.softmax(x, dim=1)
+        x = nn.functional.softmax(x, dim=-1)
 
         return x
 
