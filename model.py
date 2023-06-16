@@ -94,8 +94,8 @@ class SelfAttentionModule(nn.Module):
     def __init__(self, channels):
         super(SelfAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
