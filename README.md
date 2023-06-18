@@ -50,3 +50,44 @@ Enhanced DetailNet 模型中使用的一些数学公式：
 这些数学公式描述了 Enhanced DetailNet 模型中的关键操作和机制，包括卷积操作、残差连接、注意力机制和全局平均池化。这些公式的应用有助于模型从输入图像中提取特征、增
 
 强关键细节的关注、融合不同尺度的信息，并最终得到具有增强对近似物体和细节处理能力的输出结果。
+
+
+```
+EnhancedDetailNet(
+  (input_layer): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (relu): ReLU(inplace=True)
+  (conv_module): Sequential(
+    (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+    (4): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (5): ReLU(inplace=True)
+  )
+  (residual): Sequential(
+    (0): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+    (1): ReLU(inplace=True)
+  )
+  (self_attention): SelfAttentionModule(
+    (query): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
+    (key): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
+    (value): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (multi_scale_attention): MultiScaleAttentionModule(
+    (query): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
+    (key): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
+    (value): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (pooling): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  (enhanced_conv): Sequential(
+    (0): Conv2d(32, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+  )
+  (global_pooling): AdaptiveAvgPool2d(output_size=1)
+  (fc): Linear(in_features=128, out_features=15, bias=True)
+  (softmax): Softmax(dim=1)
+  (dropout): Dropout(p=0.5, inplace=False)
+)
+```
