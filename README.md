@@ -52,42 +52,48 @@ Enhanced DetailNet 模型中使用的一些数学公式：
 强关键细节的关注、融合不同尺度的信息，并最终得到具有增强对近似物体和细节处理能力的输出结果。
 
 
-```
-EnhancedDetailNet(
-  (input_layer): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (relu): ReLU(inplace=True)
-  (conv_module): Sequential(
-    (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (1): ReLU(inplace=True)
-    (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (3): ReLU(inplace=True)
-    (4): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (5): ReLU(inplace=True)
-  )
-  (residual): Sequential(
-    (0): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-    (1): ReLU(inplace=True)
-  )
-  (self_attention): SelfAttentionModule(
-    (query): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
-    (key): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
-    (value): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-  )
-  (multi_scale_attention): MultiScaleAttentionModule(
-    (query): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
-    (key): Conv2d(32, 4, kernel_size=(1, 1), stride=(1, 1))
-    (value): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-  )
-  (pooling): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-  (enhanced_conv): Sequential(
-    (0): Conv2d(32, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (1): ReLU(inplace=True)
-    (2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (3): ReLU(inplace=True)
-  )
-  (global_pooling): AdaptiveAvgPool2d(output_size=1)
-  (fc): Linear(in_features=128, out_features=15, bias=True)
-  (softmax): Softmax(dim=1)
-  (dropout): Dropout(p=0.5, inplace=False)
-)
-```
+## Model Layer Structure
+
+| Layer No. | Type                  | Output Shape   | Param Count |
+| --------- | ---------------------| -------------- | ----------- |
+| 1         | Conv2d                | [-1, 8, 32, 32] | 224         |
+| 2         | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 3         | Conv2d                | [-1, 8, 32, 32] | 72          |
+| 4         | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 5         | Conv2d                | [-1, 8, 32, 32] | 584         |
+| 6         | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 7         | Conv2d                | [-1, 8, 32, 32] | 584         |
+| 8         | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 9         | Conv2d                | [-1, 8, 32, 32] | 584         |
+| 10        | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 11        | ReLU                  | [-1, 8, 32, 32] | 0           |
+| 12        | Conv2d                | [-1, 1, 32, 32] | 9           |
+| 13        | Conv2d                | [-1, 1, 32, 32] | 9           |
+| 14        | Conv2d                | [-1, 8, 32, 32] | 72          |
+| 15        | SelfAttentionModule   | [-1, 8, 32, 32] | 0           |
+| 16        | Conv2d                | [-1, 1, 32, 32] | 9           |
+| 17        | Conv2d                | [-1, 1, 32, 32] | 9           |
+| 18        | Conv2d                | [-1, 8, 32, 32] | 72          |
+| 19        | MultiScaleAttentionModule | [-1, 8, 32, 32] | 0        |
+| 20        | MaxPool2d             | [-1, 8, 16, 16] | 0           |
+| 21        | Conv2d                | [-1, 32, 16, 16] | 2,336      |
+| 22        | ReLU                  | [-1, 32, 16, 16] | 0           |
+| 23        | Conv2d                | [-1, 32, 16, 16] | 9,248       |
+| 24        | ReLU                  | [-1, 32, 16, 16] | 0           |
+| 25        | ReLU                  | [-1, 32, 16, 16] | 0           |
+| 26        | AdaptiveAvgPool2d     | [-1, 32, 1, 1]  | 0           |
+| 27        | Linear                | [-1, 15]        | 495         |
+| 28        | Dropout               | [-1, 15]        | 0           |
+| 29        | Softmax               | [-1, 15]        | 0           |
+
+## Additional Information
+
+| Metric                        | Value    |
+| ----------------------------- | -------- |
+| Input Size (MB)               | 0.01     |
+| Forward/Backward Pass Size (MB)| 1.30     |
+| Parameters Size (MB)          | 0.05     |
+| Estimated Total Size (MB)     | 1.36     |
+| Total Parameters Count        | 14,307   |
+| Trainable Parameters Count    | 14,307   |
+| Non-trainable Parameters Count| 0        |
