@@ -3,6 +3,10 @@ Enhanced DetailNet.py
 Enhanced DetailNet.md
 research.md
 
+val.txt
+test.txt
+train.txt
+
 # 忽略特定文件夹
 data/
 
