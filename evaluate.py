@@ -17,14 +17,14 @@ input_channels = 3
 
 # Load the test dataset
 test_dataset = CustomDataset("./test.txt", input_size=(32, 32), transform=ToTensor())
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
 
 # Create the model
 model = EnhancedDetailNet(num_classes=num_classes, input_channels=input_channels)
 model = model.to(device)
 
 # Load the trained model
-model.load_state_dict(torch.load("model_epoch10.pth"))
+model.load_state_dict(torch.load("model_epoch300300.pth"))
 model.eval()
 
 # Evaluation loop
@@ -38,6 +38,10 @@ with torch.no_grad():
         _, predicted = torch.max(outputs.data, 1)
         total_samples += labels.size(0)
         total_correct += (predicted == labels).sum().item()
+
+        # Print the prediction for each image
+        for i in range(images.size(0)):
+            print(f"Image {i + 1}: Predicted class {predicted[i]}, lables {labels[i]}, outputs.data {outputs.data}")
 
     accuracy = 100 * total_correct / total_samples
     print(f"Accuracy: {accuracy:.2f}%")

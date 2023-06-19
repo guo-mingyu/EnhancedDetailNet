@@ -153,8 +153,3 @@ class MultiScaleAttentionModule(nn.Module):
         out = self.gamma * out + x
 
         return out
-
-
-
-
-
