@@ -18,22 +18,26 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_classes", type=int, default=15, help="Number of classes")
 parser.add_argument("--input_channels", type=int, default=3, help="Number of input channels")
+parser.add_argument("--channel_mode", type=str, default="normal",
+                    help="Channel mode: lightweight, mode: normal, normal, advanced")
 parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
 parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
 parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--save_interval", type=int, default=10, help="Interval for saving the model")
+parser.add_argument("--input_size", type=int, default=32, help="Input image size")
 args = parser.parse_args()
 
 print(args)
+
 # Load the dataset
-train_dataset = CustomDataset("./train.txt", input_size=(32, 32), transform=ToTensor())
-val_dataset = CustomDataset("./val.txt", input_size=(32, 32), transform=ToTensor())
+train_dataset = CustomDataset("./train.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+val_dataset = CustomDataset("./val.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
 
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
 # Create the model
-model = EnhancedDetailNet(num_classes=args.num_classes, input_channels=args.input_channels)
+model = EnhancedDetailNet(input_channels=args.input_channels, num_classes=args.num_classes, channel_mode=args.channel_mode)
 model = model.to(device)
 
 # Print the model structure
@@ -51,6 +55,11 @@ for epoch in range(args.num_epochs):
     total_correct = 0
     total_samples = 0
     start_time = time.time()  # 记录每个epoch的开始时间
+
+    # Track true positives and actual positives for each class
+    true_positives = torch.zeros(args.num_classes)
+    actual_positives = torch.zeros(args.num_classes)
+
     for i, (images, labels) in enumerate(train_loader):
         # Move tensors to the configured device
         images = images.to(device)
@@ -71,6 +80,11 @@ for epoch in range(args.num_epochs):
         total_samples += labels.size(0)
         total_correct += (predicted == labels).sum().item()
 
+        # Calculate true positives and actual positives
+        for c in range(args.num_classes):
+            true_positives[c] += ((predicted == c) & (labels == c)).sum().item()
+            actual_positives[c] += (labels == c).sum().item()
+
         if (i + 1) % 100 == 0:
             #print(f"Epoch [{epoch + 1}/{args.num_epochs}], Step [{i + 1}/{total_step}], Loss: {loss.item()}")
             batch_accuracy = 100 * total_correct / total_samples
@@ -82,6 +96,11 @@ for epoch in range(args.num_epochs):
     end_time = time.time()  # 记录每个epoch的结束时间
     epoch_time = end_time - start_time  # 计算每个epoch的持续时间
     print(f"Epoch [{epoch + 1}], Training Loss: {epoch_loss}, Training Accuracy: {epoch_accuracy}%, Time: {epoch_time}s")
+
+    # Calculate recall for each class
+    recall = true_positives / actual_positives
+    for c in range(args.num_classes):
+        print(f"Recall for class {c}: {recall[c] * 100}%")
 
     # Validation
     model.eval()  # Set the model to evaluation mode
@@ -124,6 +143,6 @@ for epoch in range(args.num_epochs):
 
     # Save the trained model
     if (epoch + 1) % args.save_interval == 0:
-        torch.save(model.state_dict(), f"model_epoch300{epoch + 1}.pth")
+        torch.save(model.state_dict(), f"model_epoch{args.channel_mode}{epoch + 1}.pth")
 
 print("Training complete!")

@@ -8,16 +8,16 @@ num_classes = 15
 input_channels = 3
 
 # Load the image
-image_path = "./data/PlantVillage/Tomato_Septoria_leaf_spot/ff38c095-8835-41e6-871d-dd81861f5292___JR_Sept.L.S 2557.JPG"
+image_path = "./data/PlantVillage/Potato___Late_blight/5ec337d4-aff8-4174-bae6-72c246db3ce0___RS_LB 3175.JPG"
 image = Image.open(image_path)
 
 # Preprocess the image
-transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 preprocessed_image = transform(image).unsqueeze(0)
 
 # Load the trained model
 model = EnhancedDetailNet(num_classes=num_classes, input_channels=input_channels)
-model.load_state_dict(torch.load("model_epoch300300.pth"))
+model.load_state_dict(torch.load("model_epoch100.pth"))
 model.eval()
 
 # Pass the image through the model
@@ -37,4 +37,4 @@ predicted_class_name = class_names[predicted_class.item()]
 
 # Print the predicted class
 print("Predicted class:", predicted_class.item())
-print("Predicted class:", predicted_class_name)
+print("Predicted class name:", predicted_class_name)

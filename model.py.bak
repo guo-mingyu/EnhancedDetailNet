@@ -2,74 +2,41 @@ import torch
 import torch.nn as nn
 
 class EnhancedDetailNet(nn.Module):
-    def __init__(self, input_channels, num_classes, channel_mode):
+    def __init__(self, input_channels, num_classes):
         super(EnhancedDetailNet, self).__init__()
 
-        if channel_mode == 'lightweight':
-            conv_channels = 18
-        elif channel_mode == 'normal':
-            conv_channels = 50
-        elif channel_mode == 'advanced':
-            conv_channels = 100
-        else:
-            raise ValueError("Invalid channel mode. Please choose 'lightweight', 'normal', or 'advanced'.")
-
         # Input layer
-        self.input_layer = nn.Conv2d(input_channels, conv_channels, kernel_size=3, padding=1)
+        self.input_layer = nn.Conv2d(input_channels, 8, kernel_size=3, padding=1)
         self.relu = nn.ReLU()
 
         # Convolutional module
-        if channel_mode == "lightweight":
-            # Lightweight convolutional module
-            self.conv_module = nn.Sequential(
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
-            )
-        elif channel_mode == "normal":
-            # Normal convolutional module
-            self.conv_module = nn.Sequential(
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
-            )
-        elif channel_mode == "advanced":
-            # Advanced convolutional module
-            self.conv_module = nn.Sequential(
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
-            )
-        else:
-            raise ValueError("Invalid channel mode")
+        self.conv_module = nn.Sequential(
+            nn.Conv2d(8, 8, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(8, 8, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(8, 8, kernel_size=3, padding=1),
+            nn.ReLU()
+        )
 
         # Residual connection
         self.residual = nn.Sequential(
-            nn.Conv2d(conv_channels, conv_channels, kernel_size=1),
+            nn.Conv2d(8, 8, kernel_size=1),
             nn.ReLU()
         )
 
         # Attention module
-        self.self_attention = SelfAttentionModule(conv_channels)
-        self.multi_scale_attention = MultiScaleAttentionModule(conv_channels)
+        self.self_attention = SelfAttentionModule(8)
+        self.multi_scale_attention = MultiScaleAttentionModule(8)
 
         # Pooling layer
         self.pooling = nn.MaxPool2d(kernel_size=2)
 
         # Enhanced convolutional layer
         self.enhanced_conv = nn.Sequential(
-            nn.Conv2d(conv_channels, conv_channels * 2, kernel_size=3, padding=1),
+            nn.Conv2d(8, 32, kernel_size=3, padding=1),  # 减小通道数为16
             nn.ReLU(),
-            nn.Conv2d(conv_channels * 2, conv_channels * 2, kernel_size=3, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
             nn.ReLU()
         )
 
@@ -77,13 +44,13 @@ class EnhancedDetailNet(nn.Module):
         self.global_pooling = nn.AdaptiveAvgPool2d(1)
 
         # Classification/regression layer
-        self.fc = nn.Linear(conv_channels * 2, num_classes)
-
-        # Dropout layer
-        self.dropout = nn.Dropout(0.5)
+        self.fc = nn.Linear(32, num_classes)
 
         # Softmax layer
         self.softmax = nn.Softmax(dim=1)
+
+        # Dropout layer
+        self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         # Input layer
@@ -134,8 +101,8 @@ class SelfAttentionModule(nn.Module):
     def __init__(self, channels):
         super(SelfAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
@@ -163,8 +130,8 @@ class MultiScaleAttentionModule(nn.Module):
     def __init__(self, channels):
         super(MultiScaleAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
