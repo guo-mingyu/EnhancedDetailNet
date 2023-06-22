@@ -1,0 +1,148 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision.models import resnet50
+from torchvision.transforms import ToTensor
+from torch.utils.data import DataLoader
+from utils.dataset import CustomDataset
+import argparse
+import time
+
+# Define the ResNet model
+class ResNetModel(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNetModel, self).__init__()
+        self.resnet = resnet50(pretrained=True)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        return self.resnet(x)
+
+# Set device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--num_classes", type=int, default=15, help="Number of classes")
+parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
+parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
+parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs")
+parser.add_argument("--save_interval", type=int, default=10, help="Interval for saving the model")
+parser.add_argument("--input_size", type=int, default=32, help="Input image size")
+args = parser.parse_args()
+
+# Load the dataset
+train_dataset = CustomDataset("./train.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+val_dataset = CustomDataset("./val.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
+
+# Create the ResNet model
+model = ResNetModel(num_classes=args.num_classes)
+model = model.to(device)
+
+# Define the loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+
+# Training loop
+total_step = len(train_loader)
+for epoch in range(args.num_epochs):
+    model.train()  # Set the model to train mode
+    epoch_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    start_time = time.time()  # Record the start time of each epoch
+
+    # Track true positives and actual positives for each class
+    true_positives = torch.zeros(args.num_classes)
+    actual_positives = torch.zeros(args.num_classes)
+
+    for i, (images, labels) in enumerate(train_loader):
+        # Move tensors to the configured device
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Forward pass
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # Print training loss
+        epoch_loss += loss.item()
+        _, predicted = torch.max(outputs.data, 1)
+        total_samples += labels.size(0)
+        total_correct += (predicted == labels).sum().item()
+
+        # Calculate true positives and actual positives
+        for c in range(args.num_classes):
+            true_positives[c] += ((predicted == c) & (labels == c)).sum().item()
+            actual_positives[c] += (labels == c).sum().item()
+
+        if (i + 1) % 100 == 0:
+            batch_accuracy = 100 * total_correct / total_samples
+            batch_error_rate = 100 - batch_accuracy
+            print(f"Epoch [{epoch + 1}/{args.num_epochs}], Step [{i + 1}/{total_step}], Loss: {loss.item()}, Accuracy: {batch_accuracy}%, Error Rate: {batch_error_rate}%")
+
+    epoch_loss /= len(train_loader)
+    epoch_accuracy = 100 * total_correct / total_samples
+    end_time = time.time()  # Record the end time of each epoch
+    epoch_time = end_time - start_time  # Calculate the duration of each epoch
+    print(f"Epoch [{epoch + 1}], Training Loss: {epoch_loss}, Training Accuracy: {epoch_accuracy}%, Time: {epoch_time}s")
+
+    # Calculate recall for each class
+    recall = true_positives / actual_positives
+    for c in range(args.num_classes):
+        print(f"Recall for class {c}: {recall[c] * 100}%")
+
+    # Validation
+    model.eval()  # Set the model to evaluation mode
+    with torch.no_grad():
+        val_loss = 0.0
+        val_correct = 0
+        val_samples = 0
+        val_start_time = time.time()  # Record the start time of the validation process
+        for i, (images, labels) in enumerate(val_loader):
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+
+            val_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            val_samples += labels.size(0)
+            val_correct += (predicted == labels).sum().item()
+
+            if (i + 1) % 100 == 0:
+                val_batch_accuracy = 100 * val_correct / val_samples
+                val_batch_error_rate = 100 - val_batch_accuracy
+                print(f"Validation Step [{i + 1}/{len(val_loader)}], Loss: {loss.item()}, Accuracy: {val_batch_accuracy}%, Error Rate: {val_batch_error_rate}%")
+
+        val_loss /= len(val_loader)
+        val_accuracy = 100 * val_correct / val_samples
+        val_end_time = time.time()  # Record the end time of the validation process
+        val_time = val_end_time - val_start_time  # Calculate the duration of the validation process
+
+        print(f"Validation Loss: {val_loss}, Accuracy: {val_accuracy}%, Time: {val_time}s")
+
+    # Print average accuracy and loss
+    avg_train_loss = epoch_loss
+    avg_train_accuracy = epoch_accuracy
+    avg_val_loss = val_loss
+    avg_val_accuracy = val_accuracy
+
+    print(f"Average Training Loss: {avg_train_loss}, Average Training Accuracy: {avg_train_accuracy}%, Average Validation Loss: {avg_val_loss}, Average Validation Accuracy: {avg_val_accuracy}%")
+
+    # Save the trained model
+    if (epoch + 1) % args.save_interval == 0:
+        torch.save(model.state_dict(), f"model_epoch{args.channel_mode}{epoch + 1}.pth")
+
+print("Training complete!")
+
