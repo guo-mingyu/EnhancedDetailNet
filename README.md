@@ -10,7 +10,7 @@ EnhancedDetailNet has the following key features:
 - Utilizes global average pooling for comprehensive feature extraction.
 - Supports classification tasks.
 
-![EnhancedDetailNet](\model\doc\figures\Slide1.jpg)
+![EnhancedDetailNet](/model/doc/figures/Slide1.jpg)
 
 ## Installation
 
@@ -79,7 +79,7 @@ You can modify the command parameters to fine-tune the training process accordin
 Citation
 If you use EnhancedDetailNet in your research, please consider citing our paper:
 
-![EnhancedDetailNet](\model\doc\figures\EnhancedDetailNet_.png)
+![EnhancedDetailNet](/model/doc/figures/EnhancedDetailNet_.png)
 
 | Layer (type)               | Output Shape        | Param #        |
 |---------------------------|---------------------|----------------|
