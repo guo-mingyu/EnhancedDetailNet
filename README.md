@@ -72,7 +72,7 @@ To train the EnhancedDetailNet model, follow these steps:
 3. Use the following command to initiate the training process:
 
    ```bash
-   python train.py --learning_rate 1e-6 --channel_mode advanced --save_interval 100 | tee advancedEnhancedDetailNet1e-6.log
+   python train.py --learning_rate YourSettings --channel_mode advanced-300 --save_interval YourSettings | tee YourSettings.log
    ```
 You can modify the command parameters to fine-tune the training process according to your specific requirements. Experiment with different learning rates, channel modes, and other hyperparameters to optimize the model's performance for your task.
 
