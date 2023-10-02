@@ -29,6 +29,30 @@ Configuration: Adjust the model's configuration parameters in the config.yaml fi
 
 Training: Run the training script by executing the following command:
 
+## Data Preprocessing
+
+Before training a model on the PlantVillage dataset, it's essential to preprocess the data. The provided code below demonstrates the data preprocessing steps, including data splitting and label encoding.
+
+### Data Splitting
+
+We start by dividing the dataset into three subsets: training, validation, and test. The code selects random images for each category while maintaining an 80-10-10 split ratio.
+
+- 80% of the data is used for training.
+- 10% is allocated for validation.
+- The remaining 10% is set aside for testing.
+
+```python
+# Data Splitting Example
+# Code to split the data into train, validation, and test sets
+# ...
+
+# Training Data File (train_class.txt)
+# Validation Data File (val_class.txt)
+# Test Data File (test_class.txt)
+# ...
+
+
+
 ## Advanced-300 Channel Mode
 
 The `advanced-300` channel mode in this model represents the highest channel configuration, offering a powerful and detailed feature extraction capability. When using this mode, the model is configured with 300 convolutional channels. This configuration is ideal for tasks that require a comprehensive analysis of fine-grained details within images.
@@ -39,6 +63,28 @@ To use the `advanced-300` channel mode in the model, you can set the `channel_mo
 channel_mode = 'advanced-300'
 ```
 
+The code does the following:
+
+It organizes the data into training, validation, and test sets.
+It shuffles the data to ensure randomness.
+It generates files containing image paths and their corresponding class labels.
+Usage
+Ensure that you have the PlantVillage dataset in the specified data directory.
+
+Use the provided code to perform data classification. Make any necessary adjustments to the data_root variable to specify the location of your dataset.
+
+After running the code, you will have three text files: train_class.txt, val_class.txt, and test_class.txt, which contain the paths to the images and their class labels.
+
+The labels are also saved to a labels_class.txt file.
+
+File Locations
+train_class.txt: Paths to images for training.
+val_class.txt: Paths to images for validation.
+test_class.txt: Paths to images for testing.
+labels_class.txt: List of class labels.
+You can use these files for training and validation in your machine learning model.
+
+This classification of the data helps ensure that your model is trained on a diverse set of images for optimal performance.
 ## Parse Arguments
 
 The model includes several command-line arguments that can be configured to tailor the training process to your specific requirements. Here's a brief description of the available arguments:
