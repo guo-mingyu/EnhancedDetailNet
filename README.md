@@ -79,7 +79,7 @@ You can modify the command parameters to fine-tune the training process accordin
 Citation
 If you use EnhancedDetailNet in your research, please consider citing our paper:
 
-![EnhancedDetailNet](/model/doc/figures/EnhancedDetailNet.png)
+![EnhancedDetailNet](/model/doc/figures/EnhancedDetailNet_.png/)
 
 | Layer (type)               | Output Shape        | Param #        |
 |---------------------------|---------------------|----------------|
