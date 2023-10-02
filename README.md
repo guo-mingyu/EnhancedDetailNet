@@ -79,8 +79,6 @@ You can modify the command parameters to fine-tune the training process accordin
 Citation
 If you use EnhancedDetailNet in your research, please consider citing our paper:
 
-![EnhancedDetailNetMODEL](/model/doc/figures/EnhancedDetailNet_.png/)
-
 | Layer (type)               | Output Shape        | Param #        |
 |---------------------------|---------------------|----------------|
 | Conv2d-1                  | [-1, 300, 32, 32]   | 8,400          |
@@ -125,6 +123,8 @@ If you use EnhancedDetailNet in your research, please consider citing our paper:
 | Forward/backward pass size (MB): 46.86 |
 | Params size (MB): 32.09                |
 | Estimated Total Size (MB): 78.96       |
+
+[Regarding the above table, a photo illustration of the current model.](model/doc/MODEL.md)
 
 sql
 Copy code
