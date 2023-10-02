@@ -44,6 +44,7 @@ We start by dividing the dataset into three subsets: training, validation, and t
 ```python
 # Data Splitting Example
 # Code to split the data into train, validation, and test sets
+# data_annotator_class.py
 # ...
 
 # Training Data File (train_class.txt)
@@ -118,7 +119,7 @@ To train the EnhancedDetailNet model, follow these steps:
 3. Use the following command to initiate the training process:
 
    ```bash
-   python train.py --learning_rate YourSettings --channel_mode advanced-300 --save_interval YourSettings | tee YourSettings.log
+   python train.py --learning_rate YourSetting --channel_mode advanced-300 --save_interval YourSetting | tee YourSetting.log
    ```
 You can modify the command parameters to fine-tune the training process according to your specific requirements. Experiment with different learning rates, channel modes, and other hyperparameters to optimize the model's performance for your task.
 
