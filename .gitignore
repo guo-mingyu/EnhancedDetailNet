@@ -8,6 +8,22 @@ val.txt
 test.txt
 train.txt
 
+AOC_RESNET.py
+AOC.py
+AUC_RESNET.py
+AUC.py
+data_annotator_class.py
+data_annotator.py
+data_cifar_annotator_class.py
+pthChanage.py
+resize.py
+evaluate.py
+
+feature_maps32_simulation_02
+enhanced_detail_net
+enhanced_detail_net_important
+enhanced_detail_net_important2
+
 # 忽略特定文件夹
 data/
 feature_maps32/
@@ -20,3 +36,8 @@ feature_maps/
 *.txt
 *.bak
 *old*
+*.png
+*.sh
+*.ptha
+*.JPG
+*.out
