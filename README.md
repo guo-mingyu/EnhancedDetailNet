@@ -123,6 +123,21 @@ To train the EnhancedDetailNet model, follow these steps:
    ```
 You can modify the command parameters to fine-tune the training process according to your specific requirements. Experiment with different learning rates, channel modes, and other hyperparameters to optimize the model's performance for your task.
 
+## Model Evaluation
+
+The `evaluate.py` script is a valuable tool for assessing the performance of your trained model on the PlantVillage dataset. It enables you to compute various evaluation metrics and analyze the model's effectiveness.
+
+### Usage
+
+You can use `evaluate.py` to evaluate your model's performance by providing the path to your model checkpoint file and the test data. The script will load your model, run it on the test data, and produce evaluation results.
+
+To use `evaluate.py`, you can execute the following command:
+
+```bash
+python evaluate.py --model /path/to/your/model.pth --data /path/to/test_class.txt
+```
+
+
 Citation
 If you use EnhancedDetailNet in your research, please consider citing our paper:
 
