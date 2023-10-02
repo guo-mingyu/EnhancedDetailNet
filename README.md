@@ -51,9 +51,7 @@ We start by dividing the dataset into three subsets: training, validation, and t
 # Validation Data File (val_class.txt)
 # Test Data File (test_class.txt)
 # ...
-
-
-
+```
 ## Advanced-300 Channel Mode
 
 The `advanced-300` channel mode in this model represents the highest channel configuration, offering a powerful and detailed feature extraction capability. When using this mode, the model is configured with 300 convolutional channels. This configuration is ideal for tasks that require a comprehensive analysis of fine-grained details within images.
