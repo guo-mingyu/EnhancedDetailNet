@@ -1,99 +1,145 @@
-Enhanced DetailNet 模型中使用的一些数学公式：
+# Enhanced DetailNet
 
-1. 卷积操作：
-   - 输入特征图（H_in × W_in × C_in）与卷积核（K × K × C_in × C_out）之间的卷积运算可以表示为：
-     ```math
-     \text{Conv}(X, W) = \sum_{i=1}^{C_in} (X_i * W_i)
-     ```
-     其中，X_i 是输入特征图的第 i 个通道，W_i 是卷积核的第 i 个通道，* 表示卷积操作。
-   
-2. 激活函数（Activation Function）：
-   - ReLU（Rectified Linear Unit）函数：
-     ```math
-     f(x) = max(0, x)
-     ```
-     其中，`x` 是输入值。
+## Introduction
 
-3. 残差连接：
-   - 输入特征图 X 通过残差连接与卷积操作的输出特征图 F 进行相加操作，表示为：
-     ```math
-     \text{Residual}(X, F) = X + F
-     ```
+This repository contains the implementation of the EnhancedDetailNet model for image processing tasks. EnhancedDetailNet is a deep learning model designed to capture fine-grained details in images. This README provides an overview of the model, instructions for installation, and guidelines for training.
 
-4. 注意力模块：
-   - 自注意力机制：自注意力机制使用了三个线性变换矩阵，分别为查询矩阵（Q）、键矩阵（K）和值矩阵（V）。注意力机制的计算公式如下：
-     ```math
-     \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V
-     ```
-     其中，d_k 是查询矩阵和键矩阵的维度。
+EnhancedDetailNet has the following key features:
+- Preserves the aspect ratio of input images.
+- Employs a multi-scale attention mechanism to highlight crucial regions in the image.
+- Utilizes global average pooling for comprehensive feature extraction.
+- Supports classification tasks.
 
-   - 多尺度注意力：多尺度注意力通过引入不同的尺度下的自注意力机制，并对结果进行融合。多尺度注意力的计算公式如下：
-     ```math
-     \text{MultiScaleAttention}(X) = \text{concat}\left(\text{Attention}(X; Q_1, K_1, V_1), \text{Attention}(X; Q_2, K_2, V_2), \ldots\right)
-     ```
-     其中，Q_i、K_i 和 V_i 分别表示第 i 个尺度下的查询矩阵、键矩阵和值矩阵。
-   
-5. 池化操作（Pooling）：
-   - 最大池化（Max Pooling）操作：
-     ```math
-     C[i, j] = max(A[i*s, j*s])  (i, j)
-     ```
-     其中，`A` 是输入特征图，`C` 是池化结果，`s` 是池化的步幅。
-   
-6. 全局平均池化：
-   - 对最后一个卷积层的输出特征图进行全局平均池化，将特征图转换为固定长度的特征向量。全局平均池化的计算公式为：
-     ```math
-     \text{GlobalAvgPool}(X) = \frac{1}{H \times W} \sum_{i=1}^{H} \sum_{j=1}^{W} X_{ij}
-     ```
-     其中，H 和 W 分别表示特征图的高度和宽度。
+![EnhancedDetailNet](.\model\doc\figures\Slide1.jpg)
 
-这些数学公式描述了 Enhanced DetailNet 模型中的关键操作和机制，包括卷积操作、残差连接、注意力机制和全局平均池化。这些公式的应用有助于模型从输入图像中提取特征、增
+## Installation
 
-强关键细节的关注、融合不同尺度的信息，并最终得到具有增强对近似物体和细节处理能力的输出结果。
+You can install the required dependencies using pip:
 
+```bash
+pip install -r requirements.txt
+```
 
-## Model Layer Structure
+Training
+To train the EnhancedDetailNet model on your dataset, follow these steps:
 
-| Layer No. | Type                  | Output Shape   | Param Count |
-| --------- | ---------------------| -------------- | ----------- |
-| 1         | Conv2d                | [-1, 8, 32, 32] | 224         |
-| 2         | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 3         | Conv2d                | [-1, 8, 32, 32] | 72          |
-| 4         | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 5         | Conv2d                | [-1, 8, 32, 32] | 584         |
-| 6         | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 7         | Conv2d                | [-1, 8, 32, 32] | 584         |
-| 8         | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 9         | Conv2d                | [-1, 8, 32, 32] | 584         |
-| 10        | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 11        | ReLU                  | [-1, 8, 32, 32] | 0           |
-| 12        | Conv2d                | [-1, 1, 32, 32] | 9           |
-| 13        | Conv2d                | [-1, 1, 32, 32] | 9           |
-| 14        | Conv2d                | [-1, 8, 32, 32] | 72          |
-| 15        | SelfAttentionModule   | [-1, 8, 32, 32] | 0           |
-| 16        | Conv2d                | [-1, 1, 32, 32] | 9           |
-| 17        | Conv2d                | [-1, 1, 32, 32] | 9           |
-| 18        | Conv2d                | [-1, 8, 32, 32] | 72          |
-| 19        | MultiScaleAttentionModule | [-1, 8, 32, 32] | 0        |
-| 20        | MaxPool2d             | [-1, 8, 16, 16] | 0           |
-| 21        | Conv2d                | [-1, 32, 16, 16] | 2,336      |
-| 22        | ReLU                  | [-1, 32, 16, 16] | 0           |
-| 23        | Conv2d                | [-1, 32, 16, 16] | 9,248       |
-| 24        | ReLU                  | [-1, 32, 16, 16] | 0           |
-| 25        | ReLU                  | [-1, 32, 16, 16] | 0           |
-| 26        | AdaptiveAvgPool2d     | [-1, 32, 1, 1]  | 0           |
-| 27        | Linear                | [-1, 15]        | 495         |
-| 28        | Dropout               | [-1, 15]        | 0           |
-| 29        | Softmax               | [-1, 15]        | 0           |
+Dataset Preparation: Prepare your dataset in the desired format. Ensure it is organized appropriately for model training.
 
-## Additional Information
+Configuration: Adjust the model's configuration parameters in the config.yaml file to match your dataset and task requirements.
 
-| Metric                        | Value    |
-| ----------------------------- | -------- |
-| Input Size (MB)               | 0.01     |
-| Forward/Backward Pass Size (MB)| 1.30     |
-| Parameters Size (MB)          | 0.05     |
-| Estimated Total Size (MB)     | 1.36     |
-| Total Parameters Count        | 14,307   |
-| Trainable Parameters Count    | 14,307   |
-| Non-trainable Parameters Count| 0        |
+Training: Run the training script by executing the following command:
+
+## Advanced-300 Channel Mode
+
+The `advanced-300` channel mode in this model represents the highest channel configuration, offering a powerful and detailed feature extraction capability. When using this mode, the model is configured with 300 convolutional channels. This configuration is ideal for tasks that require a comprehensive analysis of fine-grained details within images.
+
+To use the `advanced-300` channel mode in the model, you can set the `channel_mode` parameter in your code as follows:
+
+```python
+channel_mode = 'advanced-300'
+```
+
+## Parse Arguments
+
+The model includes several command-line arguments that can be configured to tailor the training process to your specific requirements. Here's a brief description of the available arguments:
+
+- `num_classes`: The number of classes in your classification task. The default value is set to 15.
+
+- `input_channels`: The number of input channels in your dataset. The default is 3, which is typical for RGB images.
+
+- `channel_mode`: This argument defines the channel configuration of the model. You can choose from different options, including `lightweight`, `normal`, `advanced`, and `advanced-300`. These modes affect the number of convolutional channels in the model.
+
+- `batch_size`: Determines the batch size used during training. The default value is set to 2, but you can adjust it to optimize training performance based on your hardware resources.
+
+- `learning_rate`: The learning rate for the optimizer during training. The default is set to `1e-6`, but you may need to experiment with different learning rates to achieve optimal training results.
+
+- `num_epochs`: Sets the number of training epochs. The default is 100, but you can modify this value based on the convergence of your model and the complexity of your task.
+
+- `save_interval`: This argument specifies the interval for saving the model during training. You can customize this value based on your preference.
+
+- `input_size`: The size of the input images, which is set to 32 by default. Make sure it matches the resolution of your input data.
+
+You can modify these arguments as needed in your code to adapt the model to your specific task and dataset. Customizing these settings can greatly impact the performance and training process of your model.
+
+## Training the Model
+
+To train the EnhancedDetailNet model, follow these steps:
+
+1. Open a terminal.
+
+2. Navigate to the project directory containing the `train.py` script.
+
+3. Use the following command to initiate the training process:
+
+   ```bash
+   python train.py --learning_rate 1e-6 --channel_mode advanced --save_interval 100 | tee advancedEnhancedDetailNet1e-6.log
+   ```
+You can modify the command parameters to fine-tune the training process according to your specific requirements. Experiment with different learning rates, channel modes, and other hyperparameters to optimize the model's performance for your task.
+
+Citation
+If you use EnhancedDetailNet in your research, please consider citing our paper:
+
+![EnhancedDetailNet](.\model\doc\figures\EnhancedDetailNet_.png)
+
+| Layer (type)               | Output Shape        | Param #        |
+|---------------------------|---------------------|----------------|
+| Conv2d-1                  | [-1, 300, 32, 32]   | 8,400          |
+| ReLU-2                    | [-1, 300, 32, 32]   | 0              |
+| Conv2d-3                  | [-1, 300, 32, 32]   | 90,300         |
+| ReLU-4                    | [-1, 300, 32, 32]   | 0              |
+| Conv2d-5                  | [-1, 300, 32, 32]   | 810,300        |
+| Tanh-6                    | [-1, 300, 32, 32]   | 0              |
+| Conv2d-7                  | [-1, 300, 32, 32]   | 810,300        |
+| Tanh-8                    | [-1, 300, 32, 32]   | 0              |
+| Conv2d-9                  | [-1, 300, 32, 32]   | 810,300        |
+| Tanh-10                   | [-1, 300, 32, 32]   | 0              |
+| Conv2d-11                 | [-1, 300, 32, 32]   | 810,300        |
+| Tanh-12                   | [-1, 300, 32, 32]   | 0              |
+| ReLU-13                   | [-1, 300, 32, 32]   | 0              |
+| Conv2d-14                 | [-1, 18, 32, 32]    | 5,418          |
+| Conv2d-15                 | [-1, 18, 32, 32]    | 5,418          |
+| Conv2d-16                 | [-1, 300, 32, 32]   | 90,300         |
+| SelfAttentionModule-17    | [-1, 300, 32, 32]   | 0              |
+| Conv2d-18                 | [-1, 18, 32, 32]    | 5,418          |
+| Conv2d-19                 | [-1, 18, 32, 32]    | 5,418          |
+| Conv2d-20                 | [-1, 300, 32, 32]   | 90,300         |
+| MultiScaleAttentionModule-21 | [-1, 300, 32, 32] | 0              |
+| MaxPool2d-22              | [-1, 300, 16, 16]   | 0              |
+| Conv2d-23                 | [-1, 600, 16, 16]   | 1,620,600      |
+| ReLU-24                   | [-1, 600, 16, 16]   | 0              |
+| Conv2d-25                 | [-1, 600, 16, 16]   | 3,240,600      |
+| ReLU-26                   | [-1, 600, 16, 16]   | 0              |
+| ReLU-27                   | [-1, 600, 16, 16]   | 0              |
+| AdaptiveAvgPool2d-28      | [-1, 600, 1, 1]     | 0              |
+| Linear-29                 | [-1, 15]            | 9,015          |
+| Dropout-30                | [-1, 15]            | 0              |
+| Softmax-31                | [-1, 15]            | 0              |
+
+| Params                                 |
+|----------------------------------------|
+| Total params: 8,412,387                |
+| Trainable params: 8,412,387            |
+| Non-trainable params: 0                |
+|                                        |
+| Input size (MB): 0.01                  |
+| Forward/backward pass size (MB): 46.86 |
+| Params size (MB): 32.09                |
+| Estimated Total Size (MB): 78.96       |
+
+sql
+Copy code
+@article{your_article,
+  title={A Multi-Scale Attention-Based Model for Image Enhancement and Classification},
+  author={guo mingyu},
+  journal={},
+  year={2023},
+}
+
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+Acknowledgments
+Any acknowledgments or credits you want to include, such as related research papers or libraries you've used.
+```
+This structure provides an overview of your model, instructions for setup and training, guidance for citation, and other essential information. You can customize this template according to your specific model and requirements.
+```

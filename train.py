@@ -5,7 +5,7 @@ import time
 from torch.utils.data import DataLoader
 import argparse
 
-from model import EnhancedDetailNet
+from model.model import EnhancedDetailNet
 from utils.metrics import accuracy
 from utils.dataset import CustomDataset
 
@@ -18,7 +18,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_classes", type=int, default=15, help="Number of classes")
 parser.add_argument("--input_channels", type=int, default=3, help="Number of input channels")
-parser.add_argument("--channel_mode", type=str, default="normal",
+parser.add_argument("--channel_mode", type=str, default="advanced-300",
                     help="Channel mode: lightweight, mode: normal, normal, advanced")
 parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
 parser.add_argument("--learning_rate", type=float, default=1e-6, help="Learning rate")

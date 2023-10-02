@@ -25,7 +25,6 @@ data_annotator.py
 evaluate.py
 jisuantu.py
 loss_accuracy.py
-model.py
 model_resnet_summary.py
 model_summary.py
 resize.py
@@ -33,6 +32,7 @@ ResnetTrain.py
 data_annotator.py
 loss_accuracy.py
 simulation-02.py
+./model.py
 feature_maps32_simulation_02
 enhanced_detail_net
 enhanced_detail_net_important
