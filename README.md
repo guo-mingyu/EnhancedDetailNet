@@ -124,7 +124,7 @@ If you use EnhancedDetailNet in your research, please consider citing our paper:
 | Params size (MB): 32.09                |
 | Estimated Total Size (MB): 78.96       |
 
-[Regarding the above table, a photo illustration of the current model.](model/doc/MODEL.md)
+[Regarding the above table, a photo illustration of the current model.](/model/doc/figures/MODEL.md)
 
 sql
 Copy code
