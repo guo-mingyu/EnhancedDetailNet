@@ -10,7 +10,6 @@ AOC_RESNET.py
 AOC.py
 AUC_RESNET.py
 AUC.py
-data_annotator_class.py
 data_annotator.py
 data_cifar_annotator_class.py
 pthChanage.py
