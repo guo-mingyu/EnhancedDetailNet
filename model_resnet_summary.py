@@ -3,6 +3,18 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 from model import EnhancedDetailNet
+from torchvision.models import resnet50
+
+# Define the ResNet model
+class ResNetModel(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNetModel, self).__init__()
+        self.resnet = resnet50(pretrained=True)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        return self.resnet(x)
 
 # Parse arguments
 parser = argparse.ArgumentParser()
@@ -17,9 +29,7 @@ parser.add_argument("--save_interval", type=int, default=10, help="Interval for 
 args = parser.parse_args()
 
 # Create an instance of the model
-#model = EnhancedDetailNet(num_classes=args.num_classes, input_channels=args.input_channels)
-model = EnhancedDetailNet(num_classes=args.num_classes, input_channels=args.input_channels,
-                          channel_mode=args.channel_mode)
+model = ResNetModel(num_classes=args.num_classes)
 
 # Print the model summary
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

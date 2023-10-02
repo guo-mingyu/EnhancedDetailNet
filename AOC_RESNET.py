@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from utils.dataset import CustomDataset
+from torchvision.models import resnet50
 
-from model import EnhancedDetailNet
 from utils.metrics import accuracy
 from torchvision.transforms import ToTensor, Resize, Compose
 import argparse
@@ -11,28 +11,39 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Define the ResNet model
+class ResNetModel(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNetModel, self).__init__()
+        self.resnet = resnet50(pretrained=True)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        return self.resnet(x)
+
+
+
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the number of classes and input channels
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_classes", type=int, default=15, help="Number of classes")
-parser.add_argument("--input_channels", type=int, default=3, help="Number of input channels")
-parser.add_argument("--channel_mode", type=str, default="normal",
-                    help="Channel mode: lightweight, mode: normal, normal, advanced")
-parser.add_argument("--model_path", type=str, default="model_epoch_lr1e-05_advanced_100.pth",
+parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
+parser.add_argument("--model_path", type=str, default="model_epoch_Resnet50_lr1e-5_100.pth",
                     help="Path to the trained model")
+parser.add_argument("--input_size", type=int, default=32, help="Input image size")
 args = parser.parse_args()
 
 print(args)
 
 # Load the test dataset
-test_dataset = CustomDataset("./test.txt", input_size=(32, 32), transform=ToTensor())
-test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
+test_dataset = CustomDataset("./test_class.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
 # Create the model
-model = EnhancedDetailNet(num_classes=args.num_classes, input_channels=args.input_channels,
-                          channel_mode=args.channel_mode)
+model = ResNetModel(num_classes=args.num_classes)
 model = model.to(device)
 
 # Load the trained model
@@ -94,7 +105,35 @@ with torch.no_grad():
     plt.title('Receiver Operating Characteristic')
     plt.legend(loc="lower right")
     # Save the figure
-    plt.savefig(f'ROC_curves{args.model_path}.png')
+    plt.savefig(f'ROC_curves_{args.model_path}_{args.num_classes}_{args.input_size}_{args.batch_size}.png')
 
     accuracy = 100 * total_correct / total_samples
     print(f"Accuracy: {accuracy:.2f}%")
+
+# Get the memory allocated in megabytes (MB)
+memory_allocated = torch.cuda.memory_allocated() / (1024 * 1024)
+print(f"Memory Allocated: {memory_allocated:.2f} MB")
+
+# Calculate top-1 and top-5 accuracy
+top1_correct = 0
+top5_correct = 0
+
+with torch.no_grad():
+    for images, labels in test_loader:
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
+
+        # Calculate top-1 accuracy
+        _, predicted = torch.max(outputs.data, 1)
+        top1_correct += (predicted == labels).sum().item()
+
+        # Calculate top-5 accuracy
+        _, top5_predicted = outputs.topk(5, dim=1)
+        top5_correct += sum([labels[i] in top5_predicted[i] for i in range(labels.size(0))])
+
+top1_accuracy = 100 * top1_correct / total_samples
+top5_accuracy = 100 * top5_correct / total_samples
+
+print(f"Top-1 Accuracy: {top1_accuracy:.2f}%")
+print(f"Top-5 Accuracy: {top5_accuracy:.2f}%")

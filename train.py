@@ -21,7 +21,7 @@ parser.add_argument("--input_channels", type=int, default=3, help="Number of inp
 parser.add_argument("--channel_mode", type=str, default="normal",
                     help="Channel mode: lightweight, mode: normal, normal, advanced")
 parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
-parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
+parser.add_argument("--learning_rate", type=float, default=1e-6, help="Learning rate")
 parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--save_interval", type=int, default=10, help="Interval for saving the model")
 parser.add_argument("--input_size", type=int, default=32, help="Input image size")
@@ -30,8 +30,8 @@ args = parser.parse_args()
 print(args)
 
 # Load the dataset
-train_dataset = CustomDataset("./train.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
-val_dataset = CustomDataset("./val.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+train_dataset = CustomDataset("./train_class.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
+val_dataset = CustomDataset("./val_class.txt", input_size=(args.input_size, args.input_size), transform=ToTensor())
 
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
@@ -143,6 +143,6 @@ for epoch in range(args.num_epochs):
 
     # Save the trained model
     if (epoch + 1) % args.save_interval == 0:
-        torch.save(model.state_dict(), f"model_epoch{args.channel_mode}{epoch + 1}.pth")
+        torch.save(model.state_dict(), f"model_epoch_lr{args.learning_rate}_{args.channel_mode}{epoch + 1}-.pth")
 
 print("Training complete!")

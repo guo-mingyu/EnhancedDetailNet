@@ -14,18 +14,21 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Define the number of classes and input channels
 num_classes = 15
 input_channels = 3
+channel_mode = "normal"
 
 # Load the test dataset
-test_dataset = CustomDataset("./test.txt", input_size=(128, 128), transform=ToTensor())
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+test_dataset = CustomDataset("./test.txt", input_size=(32, 32), transform=ToTensor())
+test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
 
 # Create the model
-model = EnhancedDetailNet(num_classes=num_classes, input_channels=input_channels)
+model = EnhancedDetailNet(num_classes=num_classes, input_channels=input_channels, channel_mode=channel_mode)
 model = model.to(device)
 
 # Load the trained model
-model.load_state_dict(torch.load("model_epoch100.pth"))
+model.load_state_dict(torch.load("model_epoch_lr0.001_normal100.pth"))
 model.eval()
+
+print(model)
 
 # Evaluation loop
 with torch.no_grad():
@@ -46,3 +49,6 @@ with torch.no_grad():
     accuracy = 100 * total_correct / total_samples
     print(f"Accuracy: {accuracy:.2f}%")
 
+# Get the memory allocated in megabytes (MB)
+memory_allocated = torch.cuda.memory_allocated() / (1024 * 1024)
+print(f"Memory Allocated: {memory_allocated:.2f} MB")

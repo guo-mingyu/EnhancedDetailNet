@@ -12,37 +12,39 @@ class EnhancedDetailNet(nn.Module):
         super(EnhancedDetailNet, self).__init__()
 
         # Input layer
-        self.input_layer = nn.Conv2d(input_channels, 32, kernel_size=3, padding=1)
+        self.input_layer = nn.Conv2d(input_channels, 300, kernel_size=3, padding=1)
         self.relu = nn.ReLU()
 
         # Convolutional module
         self.conv_module = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),
-            nn.ReLU()
+            nn.Conv2d(300, 300, kernel_size=3, stride=1, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(300, 300, kernel_size=3, stride=1, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(300, 300, kernel_size=3, stride=1, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(300, 300, kernel_size=3, stride=1, padding=1),
+            nn.Tanh()
         )
 
         # Residual connection
         self.residual = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=1),
+            nn.Conv2d(300, 300, kernel_size=1),
             nn.ReLU()
         )
 
         # Attention module
-        self.self_attention = SelfAttentionModule(32)
-        self.multi_scale_attention = MultiScaleAttentionModule(32)
+        self.self_attention = SelfAttentionModule(300)
+        self.multi_scale_attention = MultiScaleAttentionModule(300)
 
         # Pooling layer
         self.pooling = nn.MaxPool2d(kernel_size=2)
 
         # Enhanced convolutional layer
         self.enhanced_conv = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),  # 减小通道数为16
+            nn.Conv2d(300, 600, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),
+            nn.Conv2d(600, 600, kernel_size=3, padding=1),
             nn.ReLU()
         )
 
@@ -50,7 +52,7 @@ class EnhancedDetailNet(nn.Module):
         self.global_pooling = nn.AdaptiveAvgPool2d(1)
 
         # Classification/regression layer
-        self.fc = nn.Linear(32, num_classes)
+        self.fc = nn.Linear(600, num_classes)
 
         # Dropout layer
         self.dropout = nn.Dropout(0.5)
@@ -122,8 +124,8 @@ class SelfAttentionModule(nn.Module):
     def __init__(self, channels):
         super(SelfAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
@@ -151,8 +153,8 @@ class MultiScaleAttentionModule(nn.Module):
     def __init__(self, channels):
         super(MultiScaleAttentionModule, self).__init__()
 
-        self.query = nn.Conv2d(channels, channels // 8, kernel_size=1)
-        self.key = nn.Conv2d(channels, channels // 8, kernel_size=1)
+        self.query = nn.Conv2d(channels, channels // 16, kernel_size=1)
+        self.key = nn.Conv2d(channels, channels // 16, kernel_size=1)
         self.value = nn.Conv2d(channels, channels, kernel_size=1)
 
         self.gamma = nn.Parameter(torch.zeros(1))
@@ -193,7 +195,7 @@ image = Image.open("./data/test.jpg")
 
 # Define the transformations
 transform = Compose([
-    Resize((128, 128)),
+    Resize((32, 32)),
     ToTensor()
 ])
 
@@ -204,7 +206,7 @@ image = transform(image).unsqueeze(0).to(device)
 outputs, feature_maps = model(image)
 
 # Create a directory to save the feature maps
-os.makedirs("feature_maps32", exist_ok=True)
+os.makedirs("feature_maps32_simulation_02", exist_ok=True)
 
 # Save each feature map as a PNG file
 for i, fm in enumerate(feature_maps):
@@ -239,20 +241,20 @@ for i, fm in enumerate(feature_maps):
         fm = (fm - np.min(fm)) / (np.max(fm) - np.min(fm) + 1e-8)
         fm = (fm * 255).astype(np.uint8)
         fm_image = Image.fromarray(fm.reshape(-1, 1), mode="L")
-        fm_image.save(f"feature_maps32/feature_map_{i}_layer_{layer_name}.png")
+        fm_image.save(f"feature_maps32_simulation_02/feature_map_{i}_layer_{layer_name}.png")
         print(f"Feature Map _layer_{layer_name}_{i} saved.")
     elif len(fm.shape) == 1:
         fm = (fm - np.min(fm)) / (np.max(fm) - np.min(fm) + 1e-8)
         fm = (fm * 255).astype(np.uint8)
         fm_image = Image.fromarray(fm.reshape(-1, 1), mode="L")
-        fm_image.save(f"feature_maps32/feature_map_{i}_layer_{layer_name}.png")
+        fm_image.save(f"feature_maps32_simulation_02/feature_map_{i}_layer_{layer_name}.png")
         print(f"Feature Map _layer_{layer_name}_{i} saved.")
     elif len(fm.shape) == 2:
         # If the feature map is already 2D, save it as grayscale image
         fm = (fm - np.min(fm)) / (np.max(fm) - np.min(fm) + 1e-8)  # 将特征图的值缩放到 0-1 范围内
         fm = (fm * 255).astype(np.uint8)  # 将特征图的值转换为整数类型
         fm_image = Image.fromarray(fm, mode="RGB")  # 创建灰度图像对象
-        fm_image.save(f"feature_maps32/feature_map_{i + 1}_layer_{layer_name}.png")
+        fm_image.save(f"feature_maps32_simulation_02/feature_map_{i + 1}_layer_{layer_name}.png")
         print(f"Feature Map {i+1}_layer_{layer_name} saved.")
     elif len(fm.shape) == 3:
         # If the feature map has 3 dimensions, save each channel as grayscale image
@@ -261,7 +263,7 @@ for i, fm in enumerate(feature_maps):
             fm_channel = (fm_channel - np.min(fm_channel)) / (np.max(fm_channel) - np.min(fm_channel) + 1e-8)  # 将特征图的值缩放到 0-1 范围内
             fm_channel = (fm_channel * 255).astype(np.uint8)  # 将特征图的值转换为整数类型
             fm_image = Image.fromarray(fm_channel, mode="L")  # 创建灰度图像对象
-            fm_image.save(f"feature_maps32/feature_map_{i + 1}_layer_{layer_name}_channel_{channel + 1}.png")
+            fm_image.save(f"feature_maps32_simulation_02/feature_map_{i + 1}_layer_{layer_name}_channel_{channel + 1}.png")
             print(f"Feature Map_layer_{layer_name}_{i+1} Channel {channel+1} saved.")
 
 print("Feature maps saved successfully.")

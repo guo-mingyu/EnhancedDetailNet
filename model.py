@@ -11,43 +11,100 @@ class EnhancedDetailNet(nn.Module):
             conv_channels = 50
         elif channel_mode == 'advanced':
             conv_channels = 100
+        elif channel_mode == 'advanced-200':
+            conv_channels = 200
+        elif channel_mode == 'advanced-300':
+            conv_channels = 300
+        elif channel_mode == 'advanced-600':
+            conv_channels = 600
+        elif channel_mode == 'advanced-1000':
+            conv_channels = 1000
         else:
             raise ValueError("Invalid channel mode. Please choose 'lightweight', 'normal', or 'advanced'.")
 
         # Input layer
         self.input_layer = nn.Conv2d(input_channels, conv_channels, kernel_size=3, padding=1)
         self.relu = nn.ReLU()
+        #self.tanh = nn.Tanh()
 
         # Convolutional module
         if channel_mode == "lightweight":
             # Lightweight convolutional module
             self.conv_module = nn.Sequential(
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
+                nn.Tanh()
             )
         elif channel_mode == "normal":
             # Normal convolutional module
             self.conv_module = nn.Sequential(
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
+                nn.Tanh()
             )
         elif channel_mode == "advanced":
             # Advanced convolutional module
             self.conv_module = nn.Sequential(
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
-                nn.ReLU()
+                nn.Tanh()
+            )
+        elif channel_mode == "advanced-200":
+            # Advanced convolutional module
+            self.conv_module = nn.Sequential(
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh()
+            )
+        elif channel_mode == "advanced-300":
+            # Advanced convolutional module
+            self.conv_module = nn.Sequential(
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh()
+            )
+        elif channel_mode == "advanced-600":
+            # Advanced convolutional module
+            self.conv_module = nn.Sequential(
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh()
+            )
+        elif channel_mode == "advanced-1000":
+            # Advanced convolutional module
+            self.conv_module = nn.Sequential(
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(conv_channels, conv_channels, kernel_size=3, padding=1),
+                nn.Tanh()
             )
         else:
             raise ValueError("Invalid channel mode")
